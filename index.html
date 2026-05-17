@@ -8,30 +8,44 @@ let done = 0;
 let correct = 0;
 let wrongList = [];
 
-fetch('questions.json')
-  .then(res => res.json())
-  .then(data => {
+async function loadQuestions(){
 
-    questions = data.filter(q =>
-      q &&
-      q.question &&
-      q.options &&
-      q.options.length > 0
-    );
+  try{
+
+    const response =
+      await fetch('./questions.json');
+
+    const data =
+      await response.json();
+
+    questions = data.filter(q => {
+
+      return (
+        q &&
+        typeof q === 'object' &&
+        q.question &&
+        Array.isArray(q.options) &&
+        q.options.length > 0
+      );
+
+    });
 
     document.getElementById('total').innerText =
       questions.length;
 
     renderQuestion();
 
-  })
-  .catch(err => {
+  }catch(err){
 
     console.error(err);
 
-    alert('题库加载失败');
+    alert(
+      '题库加载失败，请检查 questions.json'
+    );
 
-  });
+  }
+
+}
 
 function cleanQuestion(text){
 
@@ -39,27 +53,22 @@ function cleanQuestion(text){
 
   return text
 
-    // 删除 “答案:B”
     .replace(/答案[:：]?\s*[A-D]+/gi,'')
 
-    // 删除结尾 ". B"
     .replace(/[。\.]\s*[A-D]$/g,'')
 
-    // 删除结尾 " B"
     .replace(/\s+[A-D]$/g,'')
 
-    // 删除 "(B)" "(A)"
     .replace(/[（(]\s*[A-D]\s*[）)]/g,'（ ）')
 
-    // 恢复空括号
     .replace(/（\s*）\s*[A-D]$/g,'（ ）')
 
-    // 清理多余空格
     .replace(/\s+/g,' ')
 
     .trim();
 
 }
+
 function renderQuestion(){
 
   if(!questions.length) return;
@@ -211,8 +220,6 @@ function submitAnswer(){
 
 function nextQuestion(){
 
-  if(!questions.length) return;
-
   current++;
 
   if(current >= questions.length){
@@ -226,8 +233,6 @@ function nextQuestion(){
 }
 
 function randomQuestion(){
-
-  if(!questions.length) return;
 
   current =
     Math.floor(Math.random() * questions.length);
@@ -259,5 +264,7 @@ function showWrongQuestions(){
   renderQuestion();
 
 }
+
+loadQuestions();
 
 </script>
