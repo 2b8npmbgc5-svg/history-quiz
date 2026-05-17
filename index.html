@@ -38,14 +38,28 @@ function cleanQuestion(text){
   if(!text) return '';
 
   return text
-    .replace(/答案[:：]?[A-D]+/g,'')
-    .replace(/[（(]\s*[A-D]\s*[）)]/g,'（ ）')
+
+    // 删除 “答案:B”
+    .replace(/答案[:：]?\s*[A-D]+/gi,'')
+
+    // 删除结尾 ". B"
+    .replace(/[。\.]\s*[A-D]$/g,'')
+
+    // 删除结尾 " B"
     .replace(/\s+[A-D]$/g,'')
+
+    // 删除 "(B)" "(A)"
+    .replace(/[（(]\s*[A-D]\s*[）)]/g,'（ ）')
+
+    // 恢复空括号
+    .replace(/（\s*）\s*[A-D]$/g,'（ ）')
+
+    // 清理多余空格
     .replace(/\s+/g,' ')
+
     .trim();
 
 }
-
 function renderQuestion(){
 
   if(!questions.length) return;
