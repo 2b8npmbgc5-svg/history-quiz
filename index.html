@@ -1,3 +1,240 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>中国近代史在线刷题系统</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Microsoft YaHei", sans-serif;
+    }
+
+    body {
+      background: #f3f6fb;
+      color: #333;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .title {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .title h1 {
+      color: #1565c0;
+      font-size: 42px;
+      margin-bottom: 10px;
+    }
+
+    .title p {
+      color: #666;
+      font-size: 18px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 25px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+      text-align: center;
+    }
+
+    .card h2 {
+      color: #1565c0;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .quiz-box {
+      background: white;
+      border-radius: 25px;
+      padding: 35px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+    }
+
+    .tag {
+      display: inline-block;
+      background: #e3f2fd;
+      color: #1565c0;
+      padding: 6px 14px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .question {
+      font-size: 24px;
+      margin-bottom: 25px;
+      line-height: 1.8;
+    }
+
+    .option {
+      width: 100%;
+      border: 2px solid #ddd;
+      background: white;
+      padding: 16px;
+      margin-bottom: 15px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: 0.3s;
+      text-align: left;
+      font-size: 17px;
+    }
+
+    .option:hover {
+      border-color: #1565c0;
+      background: #f0f7ff;
+    }
+
+    .selected {
+      border-color: #1565c0;
+      background: #dbeeff;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 25px;
+      flex-wrap: wrap;
+    }
+
+    button.action {
+      border: none;
+      padding: 14px 26px;
+      border-radius: 16px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      transition: 0.3s;
+      color: white;
+    }
+
+    .submit {
+      background: #1565c0;
+    }
+
+    .next {
+      background: #43a047;
+    }
+
+    .random {
+      background: #ef6c00;
+    }
+
+    .wrong {
+      background: #c62828;
+    }
+
+    .analysis {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 18px;
+      background: #f1f8e9;
+      display: none;
+    }
+
+    .analysis h3 {
+      color: #2e7d32;
+      margin-bottom: 10px;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      color: #666;
+    }
+
+    @media(max-width:768px){
+      .question{
+        font-size:20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="title">
+      <h1>中国近代史在线刷题系统</h1>
+      <p>1063道题库 · 自动判分 · 错题本</p>
+    </div>
+
+    <div class="stats">
+
+      <div class="card">
+        <h2>总题数</h2>
+        <p id="total">0</p>
+      </div>
+
+      <div class="card">
+        <h2>已完成</h2>
+        <p id="done">0</p>
+      </div>
+
+      <div class="card">
+        <h2>正确率</h2>
+        <p id="rate">0%</p>
+      </div>
+
+      <div class="card">
+        <h2>错题数</h2>
+        <p id="wrong">0</p>
+      </div>
+
+    </div>
+
+    <div class="quiz-box">
+
+      <div class="tag" id="typeTag">加载中...</div>
+
+      <div class="question" id="question"></div>
+
+      <div id="options"></div>
+
+      <div class="buttons">
+        <button class="action submit" onclick="submitAnswer()">提交答案</button>
+        <button class="action next" onclick="nextQuestion()">下一题</button>
+        <button class="action random" onclick="randomQuestion()">随机抽题</button>
+        <button class="action wrong" onclick="showWrongQuestions()">错题本</button>
+      </div>
+
+      <div class="analysis" id="analysis">
+        <h3 id="answer"></h3>
+        <p id="explanation"></p>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      中国近代史刷题网站 · 本地部署版
+    </div>
+
+  </div>
+
 <script>
 
 let questions = [];
@@ -8,66 +245,29 @@ let done = 0;
 let correct = 0;
 let wrongList = [];
 
-async function loadQuestions(){
+fetch('questions.json')
+  .then(res => res.json())
+  .then(data => {
 
-  try{
+    questions = data.filter(q =>
+      q &&
+      q.question &&
+      q.options &&
+      q.options.length > 0
+    );
 
-    const response =
-      await fetch('questions.json');
-
-    const data =
-      await response.json();
-
-    questions = data.filter(q => {
-
-      return (
-        q &&
-        typeof q === 'object' &&
-        q.question &&
-        Array.isArray(q.options) &&
-        q.options.length > 0
-      );
-
-    });
-
-    document.getElementById('total').innerText =
-      questions.length;
+    document.getElementById('total').innerText = questions.length;
 
     renderQuestion();
 
-  }catch(err){
+  })
+  .catch(err => {
 
     console.error(err);
 
-    alert(
-      '题库加载失败，请检查 questions.json'
-    );
+    alert('题库加载失败');
 
-  }
-
-}
-
-function cleanQuestion(text){
-
-  if(!text) return '';
-
-  return text
-
-    .replace(/答案[:：]?\s*[A-D]+/gi,'')
-
-    .replace(/[。\.]\s*[A-D]$/g,'')
-
-    .replace(/\s+[A-D]$/g,'')
-
-    .replace(/[（(]\s*[A-D]\s*[）)]/g,'（ ）')
-
-    .replace(/（\s*）\s*[A-D]$/g,'（ ）')
-
-    .replace(/\s+/g,' ')
-
-    .trim();
-
-}
+  });
 
 function renderQuestion(){
 
@@ -75,33 +275,15 @@ function renderQuestion(){
 
   const q = questions[current];
 
-  let typeText = '题目';
-
-  if(q.type === 'single'){
-
-    typeText = '单选题';
-
-  }else if(q.type === 'multiple'){
-
-    typeText = '多选题';
-
-  }else if(q.type === 'judge'){
-
-    typeText = '判断题';
-
-  }
-
   document.getElementById('typeTag').innerText =
-    typeText;
+    q.type || '题目';
 
   document.getElementById('question').innerText =
-    cleanQuestion(q.question);
+    q.question || '';
 
-  document.getElementById('analysis').style.display =
-    'none';
+  document.getElementById('analysis').style.display = 'none';
 
-  const optionsDiv =
-    document.getElementById('options');
+  const optionsDiv = document.getElementById('options');
 
   optionsDiv.innerHTML = '';
 
@@ -109,8 +291,7 @@ function renderQuestion(){
 
   q.options.forEach(option => {
 
-    const btn =
-      document.createElement('button');
+    const btn = document.createElement('button');
 
     btn.className = 'option';
 
@@ -124,8 +305,7 @@ function renderQuestion(){
 
         if(selected.includes(value)){
 
-          selected =
-            selected.filter(i => i !== value);
+          selected = selected.filter(i => i !== value);
 
           btn.classList.remove('selected');
 
@@ -139,11 +319,8 @@ function renderQuestion(){
 
       }else{
 
-        document
-          .querySelectorAll('.option')
-          .forEach(o =>
-            o.classList.remove('selected')
-          );
+        document.querySelectorAll('.option')
+          .forEach(o => o.classList.remove('selected'));
 
         btn.classList.add('selected');
 
@@ -160,8 +337,6 @@ function renderQuestion(){
 }
 
 function submitAnswer(){
-
-  if(!questions.length) return;
 
   const q = questions[current];
 
@@ -195,17 +370,14 @@ function submitAnswer(){
 
   }
 
-  document.getElementById('done').innerText =
-    done;
+  document.getElementById('done').innerText = done;
 
-  document.getElementById('wrong').innerText =
-    wrongList.length;
+  document.getElementById('wrong').innerText = wrongList.length;
 
   document.getElementById('rate').innerText =
     Math.floor(correct / done * 100) + '%';
 
-  document.getElementById('analysis').style.display =
-    'block';
+  document.getElementById('analysis').style.display = 'block';
 
   document.getElementById('answer').innerText =
     '正确答案：' +
@@ -253,18 +425,17 @@ function showWrongQuestions(){
 
   const randomWrong =
     wrongList[
-      Math.floor(
-        Math.random() * wrongList.length
-      )
+      Math.floor(Math.random() * wrongList.length)
     ];
 
-  current =
-    questions.indexOf(randomWrong);
+  current = questions.indexOf(randomWrong);
 
   renderQuestion();
 
 }
 
-loadQuestions();
-
 </script>
+
+</body>
+</html>
+```
